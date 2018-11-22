@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo
+  namespace: ingress
+  labels:
+    app: echo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: echo
+  template:
+    metadata:
+      labels:
+        app: echo
+        version: "1.0"
+    spec:
+      containers:
+      - name: echo
+        image: gcr.io/takata-sandbox/echo:dev
+        ports:
+        - containerPort: 8080
+        env:
+          - name: VERSION
+            value: "echo:v1.0"
+        imagePullPolicy: Always
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: echo-service
+  namespace: ingress
+spec:
+  selector:
+    app: echo
+    version: "1.0"
+  ports:
+  - protocol: TCP
+    port: 8081
+    targetPort: 8080
+  type: NodePort
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress
+  namespace: ingress
+spec:
+  backend:
+    serviceName: echo-service
+    servicePort: 8081
